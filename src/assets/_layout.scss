@@ -1,0 +1,111 @@
+// navigation
+header {
+  position: relative;
+  background: $white;
+  box-shadow: 0 0 5px 0 rgba($dark, 0.5);
+  z-index: 10;
+
+  h3 {
+    display: inline-block;
+  }
+
+  ul {
+    float: right;
+    text-align: right;
+
+    li {
+      margin-top: 4px;
+      margin-left: 6px;
+      a {
+        display: block;
+        padding: 5px;
+      }
+    }
+  }
+
+  @media screen and (max-width: 742px) {
+    h3 {
+      display: block;
+      text-align: center;
+    }
+    ul {
+      float: none;
+      text-align: center;
+    }
+  }
+}
+
+// login
+#login {
+  height: 80vh;
+  .signup-form {
+    @media screen and (max-width: 742px) {
+      padding-top: 10vh;
+    }
+  }
+  .col2 {
+    width: 400px;
+    @media screen and (max-width: 742px) {
+      width: 350px;
+    }
+    h1 {
+      margin-bottom: 2rem;
+    }
+    form {
+      max-width: 400px;
+      margin: 0 auto;
+    }
+    .bottom-options {
+      margin-top: 0.5rem;
+      width: 100%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      a {
+        display: block;
+        margin: 1rem;
+      }
+    }
+  }
+}
+
+// NavBar
+#navBar {
+  display: flex;
+  justify-content: space-around;
+
+  a {
+    color: black;
+    font-weight: 800;
+    -webkit-font-smoothing: antialiased;
+    font-family: "Montserrat", sans-serif;
+    font-size: 14px;
+    line-height: 60px;
+  }
+}
+
+// songs
+#songs {
+  padding: 6vh;
+  text-align: left;
+
+  .top-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 3vh;
+  }
+}
+// songs
+
+#playlists {
+  padding: 6vh;
+  text-align: left;
+}
+
+#player {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  background-color: transparent;
+}
