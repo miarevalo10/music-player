@@ -2,136 +2,147 @@
   <div id="songs" class="main-container">
     <div class="top-row">
       <h1>Your songs</h1>
-
       <el-button type="primary" @click="dialogFormVisible = true" round
         >Add Song</el-button
       >
+    </div>
 
-      <el-dialog
-        :title="!isEditForm ? 'Add Song' : 'Edit Song'"
-        :visible.sync="dialogFormVisible"
-        @close="resetForm"
-        width="40%"
-      >
-        <el-form
-          :model="song"
-          :rules="rules"
-          ref="songForm"
-          id="form"
-          label-position="top"
-        >
-          <el-form-item
-            style="padding:0"
-            label="Title"
-            :label-width="formLabelWidth"
-            prop="title"
-          >
-            <el-input v-model="song.title" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item
-            label="Artist"
-            :label-width="formLabelWidth"
-            prop="artist"
-          >
-            <el-input v-model="song.artist" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item
-            label="Album"
-            :label-width="formLabelWidth"
-            prop="album"
-          >
-            <el-input v-model="song.album" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="Url" :label-width="formLabelWidth" prop="url">
-            <el-input v-model="song.url" autocomplete="off"></el-input>
-          </el-form-item>
-        </el-form>
-        <span slot="footer" class="dialog-footer">
-          <el-button @click="dialogFormVisible = false" round>Cancel</el-button>
+    <el-input v-model="search" placeholder="Search by title" />
+
+    <!-- Songs table -->
+    <el-table
+      :data="
+        songs.filter(
+          data =>
+            !search || data.title.toLowerCase().includes(search.toLowerCase())
+        )
+      "
+      class="songs-table"
+      empty-text="No songs"
+    >
+      <el-table-column width="80">
+        <template slot-scope="scope">
           <el-button
-            type="primary"
-            @click="submitSong"
-            :loading="loading"
-            round
-            >{{ !isEditForm ? "Add Song" : "Edit Song" }}</el-button
-          >
-        </span>
-      </el-dialog>
-    </div>
+            type="text"
+            icon="el-icon-video-play"
+            @click="playSong(songs[scope.$index])"
+          ></el-button>
+        </template>
+      </el-table-column>
 
-    <div>
-      <el-input v-model="search" placeholder="Search by title" />
-      <el-table
-        :data="
-          songs.filter(
-            data =>
-              !search || data.title.toLowerCase().includes(search.toLowerCase())
-          )
-        "
-        class="songs-table"
-        empty-text="No songs"
+      <el-table-column prop="title" label="Title"></el-table-column>
+      <el-table-column prop="artist" label="Artist"></el-table-column>
+      <el-table-column prop="album" label="Album"></el-table-column>
+      <el-table-column align="right">
+        <!-- Edit, add to playlist and delete buttons -->
+        <template slot-scope="scope">
+          <div class="actions">
+            <el-tooltip class="item" content="Edit song" placement="bottom-end">
+              <el-button
+                icon="el-icon-edit"
+                @click="handleEditSong(songs[scope.$index])"
+                circle
+              >
+              </el-button>
+            </el-tooltip>
+
+            <el-tooltip
+              class="item"
+              content="Add to playlist"
+              placement="bottom-end"
+            >
+              <el-button
+                icon="el-icon-plus"
+                @click="handleAddToPlaylist(songs[scope.$index])"
+                circle
+              >
+              </el-button>
+            </el-tooltip>
+
+            <el-tooltip
+              class="item"
+              content="Delete song"
+              placement="bottom-end"
+            >
+              <el-button
+                type="danger"
+                icon="el-icon-delete"
+                @click="handleDeleteSong(songs[scope.$index])"
+                circle
+              >
+              </el-button>
+            </el-tooltip>
+          </div>
+        </template>
+      </el-table-column>
+      <el-table-column width="50"></el-table-column>
+    </el-table>
+
+    <!-- Add song dialog -->
+    <el-dialog
+      :title="!isEditForm ? 'Add Song' : 'Edit Song'"
+      :visible.sync="dialogFormVisible"
+      @close="resetForm"
+      width="40%"
+    >
+      <el-form
+        :model="song"
+        :rules="rules"
+        ref="songForm"
+        id="form"
+        label-position="top"
       >
-        <el-table-column width="80">
-          <template slot-scope="scope">
-            <el-button
-              type="text"
-              icon="el-icon-video-play"
-              @click="playSong(songs[scope.$index])"
-            ></el-button>
-          </template>
-        </el-table-column>
+        <el-form-item
+          style="padding:0"
+          label="Title"
+          :label-width="formLabelWidth"
+          prop="title"
+        >
+          <el-input
+            v-model="song.title"
+            autocomplete="off"
+            placeholder="Daydreaming"
+          ></el-input>
+        </el-form-item>
+        <el-form-item
+          label="Artist"
+          :label-width="formLabelWidth"
+          prop="artist"
+        >
+          <el-input
+            v-model="song.artist"
+            autocomplete="off"
+            placeholder="Radiohead"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="Album" :label-width="formLabelWidth" prop="album">
+          <el-input
+            v-model="song.album"
+            autocomplete="off"
+            placeholder="A moon shaped pool"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="Url" :label-width="formLabelWidth" prop="url">
+          <el-input
+            v-model="song.url"
+            autocomplete="off"
+            placeholder="https://music.com/cello82.mp3"
+          ></el-input>
+        </el-form-item>
+      </el-form>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="dialogFormVisible = false" round>Cancel</el-button>
+        <el-button
+          type="primary"
+          @click="submitSong"
+          :loading="loading"
+          round
+          >{{ !isEditForm ? "Add Song" : "Edit Song" }}</el-button
+        >
+      </span>
+    </el-dialog>
 
-        <el-table-column prop="title" label="Title"></el-table-column>
-        <el-table-column prop="artist" label="Artist"></el-table-column>
-        <el-table-column prop="album" label="Album"></el-table-column>
-        <el-table-column align="right">
-          <template slot-scope="scope">
-            <div class="actions">
-              <el-tooltip
-                class="item"
-                content="Edit song"
-                placement="bottom-end"
-              >
-                <el-button
-                  icon="el-icon-edit"
-                  @click="handleEditSong(songs[scope.$index])"
-                  circle
-                >
-                </el-button>
-              </el-tooltip>
-              <el-tooltip
-                class="item"
-                content="Delete song"
-                placement="bottom-end"
-              >
-                <el-button
-                  type="danger"
-                  icon="el-icon-delete"
-                  @click="handleDeleteSong(songs[scope.$index])"
-                  circle
-                >
-                </el-button>
-              </el-tooltip>
-
-              <el-tooltip
-                class="item"
-                content="Add to playlist"
-                placement="bottom-end"
-              >
-                <el-button
-                  icon="el-icon-plus"
-                  @click="handleAddToPlaylist(songs[scope.$index])"
-                  circle
-                >
-                </el-button>
-              </el-tooltip>
-            </div>
-          </template>
-        </el-table-column>
-        <el-table-column width="50"></el-table-column>
-      </el-table>
-    </div>
-
+    <!-- Delete song dialog -->
     <el-dialog
       title="Delete song"
       :visible.sync="deleteDialogVisible"
@@ -150,13 +161,19 @@
         >
       </span>
     </el-dialog>
+
+    <!-- Add song to playlist dialog -->
     <el-dialog
       title="Add to playlist"
       :visible.sync="addToPlaylistDialogVisible"
       width="40%"
     >
       <p>Add this song to a new playlist</p>
-      <el-input v-model="newPlaylistName" autocomplete="off"></el-input>
+      <el-input
+        v-model="newPlaylistName"
+        autocomplete="off"
+        placeholder="New playlist name"
+      ></el-input>
       <div v-if="playlists.length > 0" class="playlist-list">
         <p>Or select one of your playlists</p>
         <el-table
@@ -193,7 +210,16 @@
 <script>
 const fb = require("../firebaseConfig.js");
 import { mapState } from "vuex";
-
+var validateMp3Url = (rule, value, callback) => {
+  const urlReg = /^(https?|ftp|file):\/\/(www.)?(.*?)\.(mp3)$/;
+  if (value === "") {
+    callback(new Error("Please input an url"));
+  } else if (value.match(urlReg) === null) {
+    callback(new Error("Please input a valid mp3 url"));
+  } else {
+    callback();
+  }
+};
 export default {
   data() {
     return {
@@ -231,13 +257,7 @@ export default {
             trigger: "blur"
           }
         ],
-        url: [
-          {
-            required: true,
-            message: "Please input an url",
-            trigger: "blur"
-          }
-        ]
+        url: [{ required: true, validator: validateMp3Url, trigger: "blur" }]
       },
       formLabelWidth: "120px",
       loading: false,
@@ -293,21 +313,20 @@ export default {
           this.loading = false;
         });
     },
-    deleteSong(songId) {
+    deleteSong() {
       this.loading = true;
       fb.songsCollection
-        .doc(songId)
+        .doc(this.currentSong.id)
         .delete()
         .then(() => {
           this.deleteDialogVisible = false;
           this.loading = false;
-          this.$message("Song deleted");
+          this.$message("Song deleted succesfully");
         })
         .catch(function(error) {
           console.error("Error removing document: ", error);
           this.loading = false;
         });
-      this.$message("Song deleted succesfully");
     },
     submitSong() {
       this.$refs["songForm"].validate(valid => {
@@ -342,7 +361,6 @@ export default {
     },
     handleCurrentChange(val) {
       this.currentSong = { ...val };
-      console.log("currentKey", this.currentKey);
     },
     playSong(song) {
       this.currentSong = song;

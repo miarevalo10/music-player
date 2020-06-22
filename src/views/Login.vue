@@ -254,10 +254,7 @@ export default {
       );
       this.$store.commit("setCurrentUser", user.user);
       // create user obj
-      console.log("user on sign up", user.user.uid, {
-        name: this.signupForm.name,
-        email: this.signupForm.email
-      });
+
       fb.usersCollection
         .doc(user.user.uid)
         .set({

@@ -5,8 +5,6 @@
     mode="horizontal"
     :router="true"
   >
-    <!-- @click="goTo('/songs')" -->
-
     <el-menu-item style="flex-grow: 2" index="/songs">Songs</el-menu-item>
     <el-menu-item style="flex-grow: 2" index="/playlists"
       >Playlists</el-menu-item

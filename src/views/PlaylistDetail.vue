@@ -1,5 +1,6 @@
 <template>
   <div id="playlist-detail" class="main-container">
+    <!-- Title and back arrow -->
     <el-page-header
       v-if="currentPlaylist"
       @back="goBack"
@@ -7,6 +8,8 @@
       :content="currentPlaylist.name"
     >
     </el-page-header>
+
+    <!--  Songs table -->
     <div v-if="songs">
       <el-table
         :data="
@@ -31,6 +34,7 @@
         <el-table-column prop="artist" label="Artist"></el-table-column>
         <el-table-column prop="album" label="Album"></el-table-column>
         <el-table-column width="100">
+          <!--  Remove song from playlist button  -->
           <template slot-scope="scope">
             <el-tooltip
               class="item"
@@ -49,6 +53,7 @@
       </el-table>
     </div>
 
+    <!--  Remove song from playlist dialog -->
     <el-dialog
       title="Remove song"
       :visible.sync="deleteDialogVisible"
@@ -103,16 +108,20 @@ export default {
     },
     deleteSong() {
       this.loading = true;
-      console.log("cuurent song", this.currentSong);
+      console.log(this.currentSong, this.currentPlaylist.id);
+
       fb.playlistsCollection
-        .doc("FR5u9cb8MbAqhgDMELOf")
+        .doc(this.currentPlaylist.id)
         .update({
           songs: fb.fieldValue.arrayRemove(this.currentSong.id)
         })
         .then(() => {
-          console.log("Document successfully deleted!");
           this.deleteDialogVisible = false;
           this.loading = false;
+          const index = this.songs.indexOf(this.currentSong);
+          if (index > -1) {
+            this.songs.splice(index, 1);
+          }
         })
         .catch(err => {
           console.log(err);
@@ -126,7 +135,9 @@ export default {
           .get()
           .then(doc => {
             if (doc.exists) {
-              this.songs.push(doc.data());
+              const song = doc.data();
+              song.id = doc.id;
+              this.songs.push(song);
             } else {
               console.log("No such document!");
             }
@@ -142,6 +153,8 @@ export default {
         .get()
         .then(doc => {
           if (doc.exists) {
+            const playlist = doc.data();
+            playlist.id = doc.id;
             this.$store.commit("setCurrentPlaylist", doc.data());
             this.fetchSongs();
           } else {

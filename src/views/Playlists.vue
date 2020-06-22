@@ -32,19 +32,19 @@ import { mapState } from "vuex";
 export default {
   data() {
     return {
-      currentPlaylist: "",
       search: ""
     };
   },
   computed: {
-    ...mapState(["userProfile", "currentUser", "playlists"])
+    ...mapState(["playlists"])
   },
   methods: {
-    handleCurrentChange(val) {
-      this.currentPlaylist = { ...val };
-      console.log(this.currentPlaylist);
-      this.$store.commit("setCurrentPlaylist", this.currentPlaylist);
-      this.$router.push({ name: "playlistDetails", params: { id: val.id } });
+    handleCurrentChange(playlist) {
+      this.$store.commit("setCurrentPlaylist", playlist);
+      this.$router.push({
+        name: "playlistDetails",
+        params: { id: playlist.id }
+      });
     }
   }
 };

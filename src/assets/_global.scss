@@ -144,16 +144,6 @@ section {
   justify-content: center;
 }
 
-.col1,
-.col2 {
-  flex-grow: 1;
-  flex-basis: 0;
-  padding: 1rem;
-
-  @media screen and (max-width: 742px) {
-  }
-}
-
 [v-cloak] {
   display: none;
 }
