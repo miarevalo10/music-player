@@ -6,11 +6,13 @@ import Home from "@/views/Home.vue";
 import Login from "@/views/Login.vue";
 import Songs from "@/views/Songs.vue";
 import Playlists from "@/views/Playlists.vue";
+import PlaylistDetail from "@/views/PlaylistDetail.vue";
 
 Vue.use(VueRouter);
 
 const routes = [
   { path: "*", redirect: "/" },
+
   {
     path: "/",
     name: "Home",
@@ -22,7 +24,13 @@ const routes = [
       },
       {
         path: "playlists",
+        name: "playlists",
         component: Playlists
+      },
+      {
+        path: "playlists/:id",
+        name: "playlistDetails",
+        component: PlaylistDetail
       }
     ],
     meta: {

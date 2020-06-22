@@ -1,7 +1,9 @@
 <template>
   <div>
     <NavBar />
-    <router-view></router-view>
+
+    <router-view class="transition"></router-view>
+
     <Player />
   </div>
 </template>

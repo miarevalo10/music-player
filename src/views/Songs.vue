@@ -1,5 +1,5 @@
 <template>
-  <div id="songs">
+  <div id="songs" class="main-container">
     <div class="top-row">
       <h1>Your songs</h1>
 
@@ -13,8 +13,15 @@
         @close="resetForm"
         width="40%"
       >
-        <el-form :model="song" :rules="rules" ref="songForm" id="form">
+        <el-form
+          :model="song"
+          :rules="rules"
+          ref="songForm"
+          id="form"
+          label-position="top"
+        >
           <el-form-item
+            style="padding:0"
             label="Title"
             :label-width="formLabelWidth"
             prop="title"
@@ -35,68 +42,104 @@
           >
             <el-input v-model="song.album" autocomplete="off"></el-input>
           </el-form-item>
+          <el-form-item label="Url" :label-width="formLabelWidth" prop="url">
+            <el-input v-model="song.url" autocomplete="off"></el-input>
+          </el-form-item>
         </el-form>
         <span slot="footer" class="dialog-footer">
           <el-button @click="dialogFormVisible = false" round>Cancel</el-button>
-          <el-button type="primary" @click="submitSong" :loading="loading" round
-            >{{ !isEditForm ? "Add Song" : "Edit Song" }}
-          </el-button>
+          <el-button
+            type="primary"
+            @click="submitSong"
+            :loading="loading"
+            round
+            >{{ !isEditForm ? "Add Song" : "Edit Song" }}</el-button
+          >
         </span>
       </el-dialog>
     </div>
 
-    <div v-if="songs.length">
+    <div>
+      <el-input v-model="search" placeholder="Search by title" />
       <el-table
-        :data="songs"
-        style="width: 100%; height: 100%"
-        @current-change="handleCurrentChange"
-        ref="songsTable"
+        :data="
+          songs.filter(
+            data =>
+              !search || data.title.toLowerCase().includes(search.toLowerCase())
+          )
+        "
+        class="songs-table"
+        empty-text="No songs"
       >
         <el-table-column width="80">
-          <el-button
-            type="text"
-            icon="el-icon-video-play"
-            @click="playSong"
-          ></el-button>
+          <template slot-scope="scope">
+            <el-button
+              type="text"
+              icon="el-icon-video-play"
+              @click="playSong(songs[scope.$index])"
+            ></el-button>
+          </template>
         </el-table-column>
 
-        <el-table-column prop="title" label="Title"> </el-table-column>
-        <el-table-column prop="artist" label="Artist"> </el-table-column>
-        <el-table-column prop="album" label="Album"> </el-table-column>
-        <el-table-column width="50">
-          <el-dropdown
-            split-button
-            type="text"
-            trigger="click"
-            @command="handleCommand"
-          >
-            <el-dropdown-menu slot="dropdown">
-              <el-dropdown-item icon="el-icon-plus" command="addToPlaylist"
-                >Add to playlist</el-dropdown-item
+        <el-table-column prop="title" label="Title"></el-table-column>
+        <el-table-column prop="artist" label="Artist"></el-table-column>
+        <el-table-column prop="album" label="Album"></el-table-column>
+        <el-table-column align="right">
+          <template slot-scope="scope">
+            <div class="actions">
+              <el-tooltip
+                class="item"
+                content="Edit song"
+                placement="bottom-end"
               >
-              <el-dropdown-item icon="el-icon-edit" command="edit"
-                >Edit Song</el-dropdown-item
+                <el-button
+                  icon="el-icon-edit"
+                  @click="handleEditSong(songs[scope.$index])"
+                  circle
+                >
+                </el-button>
+              </el-tooltip>
+              <el-tooltip
+                class="item"
+                content="Delete song"
+                placement="bottom-end"
               >
-              <el-dropdown-item icon="el-icon-delete" command="delete"
-                >Delete</el-dropdown-item
+                <el-button
+                  type="danger"
+                  icon="el-icon-delete"
+                  @click="handleDeleteSong(songs[scope.$index])"
+                  circle
+                >
+                </el-button>
+              </el-tooltip>
+
+              <el-tooltip
+                class="item"
+                content="Add to playlist"
+                placement="bottom-end"
               >
-            </el-dropdown-menu>
-          </el-dropdown>
+                <el-button
+                  icon="el-icon-plus"
+                  @click="handleAddToPlaylist(songs[scope.$index])"
+                  circle
+                >
+                </el-button>
+              </el-tooltip>
+            </div>
+          </template>
         </el-table-column>
-        <el-table-column width="50"> </el-table-column>
+        <el-table-column width="50"></el-table-column>
       </el-table>
     </div>
 
-    <div v-else>
-      <p class="no-results">There are currently no songs</p>
-    </div>
     <el-dialog
       title="Delete song"
       :visible.sync="deleteDialogVisible"
       width="40%"
     >
-      <span v-if="currentSong"
-        >Are you sure you want to delete <i>{{ this.currentSong.title }}</i> by
+      <span v-if="currentSong">
+        Are you sure you want to delete
+        <i>{{ this.currentSong.title }}</i> by
         <i>{{ this.currentSong.artist }}</i
         >?
       </span>
@@ -104,6 +147,43 @@
         <el-button @click="deleteDialogVisible = false" round>Cancel</el-button>
         <el-button type="danger" @click="deleteSong" :loading="loading" round
           >Delete</el-button
+        >
+      </span>
+    </el-dialog>
+    <el-dialog
+      title="Add to playlist"
+      :visible.sync="addToPlaylistDialogVisible"
+      width="40%"
+    >
+      <p>Add this song to a new playlist</p>
+      <el-input v-model="newPlaylistName" autocomplete="off"></el-input>
+      <div v-if="playlists.length > 0" class="playlist-list">
+        <p>Or select one of your playlists</p>
+        <el-table
+          :data="playlists"
+          :show-header="false"
+          @selection-change="handlePlaylistsSelection"
+          empty-text="There are no playlists"
+          style="margin-top: 0"
+        >
+          <el-table-column type="selection" width="55"> </el-table-column>
+          <el-table-column property="name"></el-table-column>
+        </el-table>
+      </div>
+      <div class="error-msg" v-if="showAddPlaylistError">
+        <p>You must select or create a playlist</p>
+      </div>
+
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="addToPlaylistDialogVisible = false" round
+          >Cancel</el-button
+        >
+        <el-button
+          type="primary"
+          @click="addSongToPlaylist"
+          :loading="loading"
+          round
+          >Add to playlist</el-button
         >
       </span>
     </el-dialog>
@@ -120,11 +200,15 @@ export default {
       closeOnClick: false,
       dialogFormVisible: false,
       deleteDialogVisible: false,
+      addToPlaylistDialogVisible: false,
+      showAddPlaylistError: false,
       song: {
         title: "",
         artist: "",
-        album: ""
+        album: "",
+        url: ""
       },
+      newPlaylistName: "",
       rules: {
         title: [
           {
@@ -146,22 +230,32 @@ export default {
             message: "Please input an artist",
             trigger: "blur"
           }
+        ],
+        url: [
+          {
+            required: true,
+            message: "Please input an url",
+            trigger: "blur"
+          }
         ]
       },
       formLabelWidth: "120px",
       loading: false,
       isEditForm: false,
-      currentSong: null
+      currentSong: null,
+      play: false,
+      search: "",
+      selectedPlaylists: []
     };
   },
   computed: {
-    ...mapState(["userProfile", "currentUser", "songs"])
+    ...mapState(["userProfile", "currentUser", "songs", "playlists"])
   },
   methods: {
     updateSong() {
       this.loading = true;
       fb.songsCollection
-        .doc(this.currentSong.id)
+        .doc(this.song.id)
         .set(
           {
             ...this.song
@@ -185,39 +279,39 @@ export default {
         .add({
           ...this.song,
           createdOn: new Date(),
-          userId: this.currentUser.uid,
-          userName: "Maria"
+          userId: this.currentUser.uid
         })
         .then(() => {
           this.song = {};
           this.resetForm();
           this.dialogFormVisible = false;
           this.loading = false;
+          this.$message("New song added");
         })
         .catch(err => {
           console.log(err);
           this.loading = false;
         });
     },
-    deleteSong() {
+    deleteSong(songId) {
       this.loading = true;
       fb.songsCollection
-        .doc(this.currentSong.id)
+        .doc(songId)
         .delete()
         .then(() => {
-          console.log("Document successfully deleted!");
           this.deleteDialogVisible = false;
           this.loading = false;
+          this.$message("Song deleted");
         })
         .catch(function(error) {
           console.error("Error removing document: ", error);
           this.loading = false;
         });
+      this.$message("Song deleted succesfully");
     },
     submitSong() {
       this.$refs["songForm"].validate(valid => {
         if (valid) {
-          console.log("the song", this.song);
           this.isEditForm ? this.updateSong() : this.createSong();
         } else {
           console.log("error submit!!");
@@ -233,33 +327,55 @@ export default {
         album: ""
       };
     },
-    handleCommand(command) {
-      switch (command) {
-        case "addToPlaylist":
-          break;
-        case "edit":
-          this.handleEditSong();
-          break;
-        case "delete":
-          this.handleDeleteSong();
-          break;
-      }
-    },
-    handleEditSong() {
-      this.song = this.currentSong;
+    handleEditSong(songToEdit) {
+      this.song = { ...songToEdit };
       this.isEditForm = true;
       this.dialogFormVisible = true;
     },
-    handleDeleteSong() {
+    handleDeleteSong(song) {
       this.deleteDialogVisible = true;
+      this.currentSong = song;
+    },
+    handleAddToPlaylist(song) {
+      this.addToPlaylistDialogVisible = true;
+      this.currentSong = song;
     },
     handleCurrentChange(val) {
       this.currentSong = { ...val };
+      console.log("currentKey", this.currentKey);
     },
-    playSong() {
-      console.log("play song");
+    playSong(song) {
+      this.currentSong = song;
       this.$store.commit("setCurrentSong", this.currentSong);
-      console.log("finished");
+    },
+    handlePlaylistsSelection(val) {
+      this.selectedPlaylists = val;
+    },
+    async addSongToPlaylist() {
+      this.loading = true;
+      if (this.newPlaylistName !== "") {
+        this.showAddPlaylistError = false;
+        await fb.playlistsCollection.add({
+          name: this.newPlaylistName,
+          createdOn: new Date(),
+          userId: this.currentUser.uid,
+          songs: [this.currentSong.id]
+        });
+        this.addToPlaylistDialogVisible = false;
+        this.$message("Song added to playlist successfully");
+      } else if (this.selectedPlaylists.length > 0) {
+        this.showAddPlaylistError = false;
+        this.selectedPlaylists.forEach(async playlist => {
+          await fb.playlistsCollection.doc(playlist.id).update({
+            songs: fb.fieldValue.arrayUnion(this.currentSong.id)
+          });
+        });
+        this.addToPlaylistDialogVisible = false;
+        this.$message("Song added to playlist successfully");
+      } else {
+        this.showAddPlaylistError = true;
+      }
+      this.loading = false;
     }
   }
 };

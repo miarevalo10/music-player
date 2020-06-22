@@ -1,4 +1,4 @@
-import firebase from "firebase";
+import * as firebase from "firebase/app";
 import "firebase/firestore";
 
 // firebase init goes here
@@ -16,6 +16,8 @@ firebase.initializeApp(config);
 
 // firebase utils
 const db = firebase.firestore();
+const fieldValue = firebase.firestore.FieldValue;
+
 const auth = firebase.auth();
 const currentUser = auth.currentUser;
 
@@ -27,6 +29,7 @@ const playlistsCollection = db.collection("playlists");
 export {
   db,
   auth,
+  fieldValue,
   currentUser,
   usersCollection,
   songsCollection,

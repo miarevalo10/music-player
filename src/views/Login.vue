@@ -1,92 +1,117 @@
 <template>
-  <div id="login">
-    <section>
-      <div>
-        <el-card
-          class="box-card col2"
-          :class="{ 'signup-form': !showLoginForm }"
-        >
-          <form v-if="showLoginForm" @submit.prevent>
-            <h1>Music player login</h1>
+  <section id="login">
+    <el-card class="box-card col2" :class="{ 'signup-form': !showLoginForm }">
+      <el-form
+        v-if="showLoginForm"
+        @submit.prevent
+        :model="loginForm"
+        :rules="rulesLogin"
+        ref="loginForm"
+        id="form"
+        :validate-on-rule-change="false"
+        :hide-required-asterisk="true"
+      >
+        <h1>Login</h1>
 
-            <label for="email1">Email</label>
-            <el-input
-              v-model.trim="loginForm.email"
-              type="text"
-              placeholder="you@email.com"
-              id="email1"
-            />
+        <el-form-item label="Email" prop="email">
+          <el-input
+            v-model.trim="loginForm.email"
+            prefix-icon="el-icon-user"
+            autocomplete="off"
+            placeholder="you@email.com"
+            type="email"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="Password" prop="password">
+          <el-input
+            v-model.trim="loginForm.password"
+            type="password"
+            placeholder="******"
+            prefix-icon="el-icon-lock"
+            show-password
+          />
+        </el-form-item>
 
-            <label for="password1">Password</label>
-            <el-input
-              v-model.trim="loginForm.password"
-              type="password"
-              placeholder="******"
-              id="password1"
-            />
-            <div class="bottom-options">
-              <el-button type="text" @click="toggleForm"
-                >Create an Account</el-button
-              >
-              <el-button
-                type="primary"
-                round
-                @click="login"
-                :loading="performingRequest"
-                >Log In</el-button
-              >
-            </div>
-          </form>
-          <form v-if="!showLoginForm" @submit.prevent>
-            <h1>Create account</h1>
+        <div class="bottom-options">
+          <el-button type="text" @click="toggleForm"
+            >Create an Account</el-button
+          >
+          <el-button
+            type="primary"
+            round
+            @click="login"
+            :loading="performingRequest"
+            >Log In</el-button
+          >
+        </div>
+      </el-form>
+      <el-form
+        v-if="!showLoginForm"
+        @submit.prevent
+        :model="signupForm"
+        :rules="rulesSignup"
+        ref="signupForm"
+        :validate-on-rule-change="false"
+        :hide-required-asterisk="true"
+      >
+        <h1>Create account</h1>
 
-            <label for="name">Name</label>
-            <input
-              v-model.trim="signupForm.name"
-              type="text"
-              placeholder="Jon Doe"
-              id="name"
-            />
+        <el-form-item label="Name" prop="name">
+          <el-input
+            v-model="signupForm.name"
+            type="text"
+            placeholder="Jon Doe"
+            id="name"
+          />
+        </el-form-item>
 
-            <label for="email2">Email</label>
-            <input
-              v-model.trim="signupForm.email"
-              type="text"
-              placeholder="you@email.com"
-              id="email2"
-            />
+        <el-form-item label="Email" prop="email">
+          <el-input
+            v-model.trim="signupForm.email"
+            prefix-icon="el-icon-user"
+            autocomplete="off"
+            placeholder="you@email.com"
+            type="email"
+          ></el-input>
+        </el-form-item>
+        <el-form-item label="Password" prop="password">
+          <el-input
+            v-model.trim="signupForm.password"
+            type="password"
+            placeholder="min 6 characters"
+            prefix-icon="el-icon-lock"
+            show-password
+          />
+        </el-form-item>
+        <el-form-item label="Confirm password" prop="checkPass">
+          <el-input
+            v-model.trim="signupForm.checkPass"
+            type="password"
+            placeholder="min 6 characters"
+            prefix-icon="el-icon-lock"
+            show-password
+          />
+        </el-form-item>
 
-            <label for="password2">Password</label>
-            <input
-              v-model.trim="signupForm.password"
-              type="password"
-              placeholder="min 6 characters"
-              id="password2"
-            />
-            <div class="bottom-options">
-              <el-button type="text" @click="toggleForm"
-                >Back to Log In</el-button
-              >
+        <div class="bottom-options">
+          <el-button type="text" @click="toggleForm">Back to Log In</el-button>
+          <el-button
+            type="primary"
+            @click="signup"
+            round
+            :loading="performingRequest"
+            >Sign Up</el-button
+          >
+        </div>
+      </el-form>
 
-              <el-button
-                type="primary"
-                @click="signup"
-                round
-                :loading="performingRequest"
-                >Sign Up</el-button
-              >
-            </div>
-          </form>
-
-          <transition name="fade">
-            <div v-if="errorMsg !== ''" class="error-msg">
-              <p>{{ errorMsg }}</p>
-            </div>
-          </transition>
-        </el-card>
-      </div>
-    </section>
-  </div>
+      <transition name="fade">
+        <div v-if="errorMsg !== ''" class="error-msg">
+          <p>{{ errorMsg }}</p>
+        </div>
+      </transition>
+    </el-card>
+  </section>
 </template>
 
 <script>
@@ -94,6 +119,37 @@ const fb = require("../firebaseConfig.js");
 export default {
   name: "Login",
   data() {
+    var checkPasswordSize = (rule, value, callback) => {
+      if (!value) {
+        return callback(new Error("Please input the password"));
+      }
+      setTimeout(() => {
+        if (value.length < 7) {
+          callback(new Error("Password size must be greater than 6"));
+        } else {
+          callback();
+        }
+      }, 1000);
+    };
+    var validatePass = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("Please input the password"));
+      } else {
+        if (this.signupForm.checkPass !== "") {
+          this.$refs.signupForm.validateField("checkPass");
+        }
+        callback();
+      }
+    };
+    var validatePass2 = (rule, value, callback) => {
+      if (value === "") {
+        callback(new Error("Please input the password again"));
+      } else if (value !== this.signupForm.password) {
+        callback(new Error("The passwords don't match!"));
+      } else {
+        callback();
+      }
+    };
     return {
       loginForm: {
         email: "",
@@ -102,7 +158,39 @@ export default {
       signupForm: {
         name: "",
         email: "",
-        password: ""
+        password: "",
+        checkPass: ""
+      },
+      rulesLogin: {
+        email: [
+          {
+            required: true,
+            message: "Please input an email",
+            trigger: "blur"
+          }
+        ],
+        password: [{ validator: validatePass, trigger: "blur" }]
+      },
+      rulesSignup: {
+        name: [
+          {
+            required: true,
+            message: "Please input a name",
+            trigger: "blur"
+          }
+        ],
+        email: [
+          {
+            required: true,
+            message: "Please input an email",
+            trigger: "blur"
+          }
+        ],
+        password: [
+          { validator: validatePass, trigger: "blur" },
+          { validator: checkPasswordSize, trigger: "blur" }
+        ],
+        checkPass: [{ validator: validatePass2, trigger: "blur" }]
       },
       showLoginForm: true,
       passwordResetSuccess: false,
@@ -113,46 +201,39 @@ export default {
   methods: {
     toggleForm() {
       this.errorMsg = "";
+      this.resetForm();
       this.showLoginForm = !this.showLoginForm;
     },
-    login() {
-      this.performingRequest = true;
-      fb.auth
-        .signInWithEmailAndPassword(
-          this.loginForm.email,
-          this.loginForm.password
-        )
-        .then(user => {
-          this.$store.commit("setCurrentUser", user.user);
-          this.$store.dispatch("fetchUserProfile");
-          this.performingRequest = false;
-          this.$router.push("/songs");
-        })
-        .catch(err => {
-          console.log(err);
-          this.performingRequest = false;
-          this.errorMsg = err.message;
-        });
+    resetForm() {
+      this.showLoginForm
+        ? this.$refs["loginForm"].clearValidate(Object.keys(this.loginForm))
+        : this.$refs["signupForm"].clearValidate(Object.keys(this.signupForm));
+      this.showLoginForm
+        ? this.$refs["loginForm"].resetFields()
+        : this.$refs["signupForm"].resetFields();
+      // this.$refs["loginForm"].resetFields();
+      this.loginForm = {
+        email: "",
+        password: ""
+      };
+      this.signupForm = {
+        email: "",
+        password: "",
+        name: "",
+        checkPass: ""
+      };
     },
-    signup() {
-      this.performingRequest = true;
-      fb.auth
-        .createUserWithEmailAndPassword(
-          this.signupForm.email,
-          this.signupForm.password
-        )
-        .then(user => {
-          this.$store.commit("setCurrentUser", user.user);
-          // create user obj
-          console.log("user on sign up", user, this.signupForm);
-          fb.usersCollection
-            .doc(user.user.uid)
-            .set({
-              name: this.signupForm.name,
-              email: this.signupForm.email
-            })
-            .then(() => {
-              console.log("LLEGA AQUI", user);
+    login() {
+      this.$refs["loginForm"].validate(valid => {
+        if (valid) {
+          this.performingRequest = true;
+          fb.auth
+            .signInWithEmailAndPassword(
+              this.loginForm.email,
+              this.loginForm.password
+            )
+            .then(user => {
+              this.$store.commit("setCurrentUser", user.user);
               this.$store.dispatch("fetchUserProfile");
               this.performingRequest = false;
               this.$router.push("/songs");
@@ -162,6 +243,31 @@ export default {
               this.performingRequest = false;
               this.errorMsg = err.message;
             });
+        }
+      });
+    },
+    async signup() {
+      this.performingRequest = true;
+      const user = await fb.auth.createUserWithEmailAndPassword(
+        this.signupForm.email,
+        this.signupForm.password
+      );
+      this.$store.commit("setCurrentUser", user.user);
+      // create user obj
+      console.log("user on sign up", user.user.uid, {
+        name: this.signupForm.name,
+        email: this.signupForm.email
+      });
+      fb.usersCollection
+        .doc(user.user.uid)
+        .set({
+          name: this.signupForm.name,
+          email: this.signupForm.email
+        })
+        .then(() => {
+          this.$store.dispatch("fetchUserProfile");
+          this.performingRequest = false;
+          this.$router.push("/songs");
         })
         .catch(err => {
           console.log(err);
